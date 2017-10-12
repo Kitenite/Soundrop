@@ -1,4 +1,4 @@
-package com.yehyunryu.android.soundrop.viewpagers;
+package com.yehyunryu.android.soundrop.views;
 
 /*
  *
@@ -73,39 +73,30 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * This is a slightly modified version of the vertical pager by Grantland Chew: <br>
- * <a href="https://github.com/grantland/android-verticalpager">https://github.com/grantland/android-verticalpager</a>
- * <p>
- * Custom changes: <br>
- * 1) removed the code that shrinks the first page a little bit to make beginning of the next page visible. <br>
- * 2) onMeasure will better handle pages height (changed from MeasureSpec.UNSPECIFIED to MeasureSpec.EXACTLY). <br>
- * 3) added {@link VerticalPager#snapToPage(int, int)} method to request snap with a custom duration <br>
- * 4) added {@link VerticalPager#setPagingEnabled(boolean)} method to lock/unlock paging
+ * Code Source: https://github.com/JayaprakashR-Zealot/SnapchatDashboard/blob/master/app/src/main/java/com/truedreamz/demo/swipe/view/VerticalPager.java
+ * Modified version of the vertical pager by Grantland Chew
+ * Changes made by JayaprakashR-Zealot
+ * 1) removed the code that shrinks the first page a little bit to make beginning of the next page visible.
+ * 2) onMeasure will better handle pages height (changed from MeasureSpec.UNSPECIFIED to MeasureSpec.EXACTLY).
+ * 3) added {@link VerticalPager#snapToPage(int, int)} method to request snap with a custom duration.
+ * 4) added {@link VerticalPager#setPagingEnabled(boolean)} method to lock/unlock paging.
  */
 public class VerticalPager extends ViewGroup {
 
-    /**
-     * Default page snap duration in milliseconds.
-     */
+    //default page snap duration in milliseconds.
     public static final int PAGE_SNAP_DURATION_DEFAULT = 300;
 
-    /**
-     * Instant page snap duration in milliseconds.
-     */
+    //instant page snap duration in milliseconds.
     public static final int PAGE_SNAP_DURATION_INSTANT = 1;
 
     private boolean mIsPagingEnabled = true;
-
-    public static final String TAG = "VerticalPager";
 
     private static final int INVALID_SCREEN = -1;
     public static final int SPEC_UNDEFINED = -1;
     private static final int TOP = 0;
     private static final int BOTTOM = 1;
 
-    /**
-     * The velocity at which a fling gesture will cause us to snap to the next screen
-     */
+    //velocity at which a fling gesture will cause us to snap to the next screen
     private static final int SNAP_VELOCITY = 1000;
 
     private int pageHeight;
@@ -158,13 +149,8 @@ public class VerticalPager extends ViewGroup {
      */
     public VerticalPager(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(context);
-    }
 
-    /**
-     * Initializes various states for this workspace.
-     */
-    private void init(Context context) {
+        //initalize various states for this workspace
         mScroller = new Scroller(getContext(), new DecelerateInterpolator());
         mCurrentPage = 0;
 
@@ -173,45 +159,32 @@ public class VerticalPager extends ViewGroup {
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
     }
 
-    /**
-     * Returns the index of the currently displayed page.
-     *
-     * @return The index of the currently displayed page.
-     */
+    //return index of currently displayed page
     public int getCurrentPage() {
         return mCurrentPage;
     }
 
-    /**
-     * Sets the current page.
-     *
-     * @param currentPage
-     */
+    //set current page
     void setCurrentPage(int currentPage) {
         mCurrentPage = Math.max(0, Math.min(currentPage, getChildCount()));
         scrollTo(getScrollYForPage(mCurrentPage), 0);
         invalidate();
     }
 
+    //return page height
     public int getPageHeight() {
         return pageHeight;
     }
 
-    // public void setPageHeight(int pageHeight) {
-    // this.pageHeightSpec = pageHeight;
-    // }
-
     /**
      * Gets the value that getScrollX() should return if the specified page is the current page (and no other scrolling
      * is occurring). Use this to pass a value to scrollTo(), for example.
-     *
-     * @param whichPage
-     * @return
      */
     private int getScrollYForPage(int whichPage) {
         int height = 0;
         for (int i = 0; i < whichPage; i++) {
             final View child = getChildAt(i);
+            //checks if current page is specified page
             if (child.getVisibility() != View.GONE) {
                 height += child.getHeight();
             }
@@ -240,7 +213,6 @@ public class VerticalPager extends ViewGroup {
         // the drawing dispatch by drawing only what we know needs to be drawn.
 
         final long drawingTime = getDrawingTime();
-        // todo be smarter about which children need drawing
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             drawChild(canvas, getChildAt(i), drawingTime);
@@ -267,10 +239,6 @@ public class VerticalPager extends ViewGroup {
 
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
-            // getChildAt(i).measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(),
-            // MeasureSpec.EXACTLY),
-            // MeasureSpec.makeMeasureSpec(pageHeight,
-            // MeasureSpec.UNSPECIFIED));
             getChildAt(i).measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(pageHeight, MeasureSpec.EXACTLY));
         }
@@ -354,8 +322,6 @@ public class VerticalPager extends ViewGroup {
         if (!mIsPagingEnabled)
             return false;
 
-        // Log.d(TAG, "onInterceptTouchEvent::action=" + ev.getAction());
-
 		/*
 		 * This method JUST determines whether we want to intercept the motion. If we return true, onTouchEvent will be
 		 * called and we do the actual scrolling there.
@@ -367,7 +333,6 @@ public class VerticalPager extends ViewGroup {
 		 */
         final int action = ev.getAction();
         if ((action == MotionEvent.ACTION_MOVE) && (mTouchState != TOUCH_STATE_REST)) {
-            // Log.d(TAG, "onInterceptTouchEvent::shortcut=true");
             return true;
         }
 
@@ -413,19 +378,13 @@ public class VerticalPager extends ViewGroup {
         return mTouchState != TOUCH_STATE_REST;
     }
 
-    /**
-     * Enable or disable pages switching.
-     *
-     * @param enabled
-     *            true - enable pages switching, false - disable.
-     */
+    //set true/false for page switching
     public void setPagingEnabled(boolean enabled) {
         mIsPagingEnabled = enabled;
     }
 
-    /**
-     * @return true - if pages switching enabled, false - otherwise.
-     */
+    //return if page switching is enabled
+
     public boolean isPagingEnabled() {
         return mIsPagingEnabled;
     }
@@ -463,11 +422,10 @@ public class VerticalPager extends ViewGroup {
 
     void enableChildrenCache() {
         setChildrenDrawingCacheEnabled(true);
-        setChildrenDrawnWithCacheEnabled(true);
     }
 
     void clearChildrenCache() {
-        setChildrenDrawnWithCacheEnabled(false);
+        setChildrenDrawingCacheEnabled(false);
     }
 
     @Override

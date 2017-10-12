@@ -1,6 +1,5 @@
 package com.yehyunryu.android.soundrop.ui;
 
-import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -8,28 +7,35 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 import com.squareup.otto.Subscribe;
+import com.yehyunryu.android.soundrop.BuildConfig;
 import com.yehyunryu.android.soundrop.R;
 import com.yehyunryu.android.soundrop.event.EventBus;
 import com.yehyunryu.android.soundrop.event.PageChangeEvent;
-import com.yehyunryu.android.soundrop.viewpagers.VerticalPager;
+import com.yehyunryu.android.soundrop.views.VerticalPager;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
+    @BindView(R.id.main_vertical_pager) VerticalPager mVerticalPager;
     private static final int CENTRAL_PAGE_INDEX = 1;
-    public VerticalPager mVerticalPager;
+    //public VerticalPager mVerticalPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViews();
-    }
 
-    private void findViews() {
-        mVerticalPager = (VerticalPager) findViewById(R.id.activity_main_vertical_pager);
-        initViews();
-    }
+        //plant debug logging using timber
+        if(BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        }
 
-    private void initViews() {
+        //bind views using butterknife
+        ButterKnife.bind(this);
+
+        //snap page
         snapPageWhenLayoutIsReady(mVerticalPager, CENTRAL_PAGE_INDEX);
     }
 
@@ -41,13 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
                     pageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 } else {
-                    removeGlobalOnLayoutListenerForJellyBean(pageView);
+                    pageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 }
-            }
-
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-            private void removeGlobalOnLayoutListenerForJellyBean(final View pageView) {
-                pageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
     }

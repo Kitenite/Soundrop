@@ -14,13 +14,25 @@ import com.yehyunryu.android.soundrop.event.PageChangeEvent;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+/**
+ * Code Source: https://github.com/JayaprakashR-Zealot/SnapchatDashboard/blob/master/app/src/main/java/com/truedreamz/demo/swipe/fragment/CentralCompositeFragment.java
+ */
+
+/**
+ * Fragment to manage the horizontal pages (left, central, right) of the 5 pages application navigation (top, center,
+ * bottom, left, right).
+ */
 public class CenterHorizontalFragment extends Fragment {
-    public ViewPager mHorizontalPager;
+    @BindView(R.id.fragment_central_horizontal_pager) ViewPager mHorizontalPager;
+
     private int mCentralPageIndex = 0;
     private ViewPager.OnPageChangeListener mPageChangeListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
+            //nothing
         }
 
         @Override
@@ -30,7 +42,7 @@ public class CenterHorizontalFragment extends Fragment {
 
         @Override
         public void onPageScrollStateChanged(int state) {
-
+            //nothing
         }
     };
 
@@ -41,21 +53,13 @@ public class CenterHorizontalFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        //inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_center_horizontal, container, false);
-        findViews(fragmentView);
-        return fragmentView;
-    }
-
-    private void findViews(View fragmentView) {
-        mHorizontalPager = (ViewPager) fragmentView.findViewById(R.id.fragment_central_horizontal_pager);
-        initViews();
-    }
-
-    private void initViews() {
+        ButterKnife.bind(this, fragmentView);
         populateHorizontalPager();
         mHorizontalPager.setCurrentItem(mCentralPageIndex);
         mHorizontalPager.addOnPageChangeListener(mPageChangeListener);
+        return fragmentView;
     }
 
     private void populateHorizontalPager() {

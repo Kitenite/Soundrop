@@ -8,17 +8,20 @@ import android.view.ViewGroup;
 
 import com.yehyunryu.android.soundrop.R;
 
+import butterknife.ButterKnife;
+
 public class DiscoverFragment extends Fragment {
 
     public DiscoverFragment() {
-        // Required empty public constructor
+        //required empty public constructor
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        //inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_discover, container, false);
+        ButterKnife.bind(this, fragmentView);
         return fragmentView;
     }
 }

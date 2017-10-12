@@ -8,7 +8,9 @@ import android.support.v4.app.FragmentPagerAdapter;
 import java.util.List;
 
 /**
- * Created by Yehyun Ryu on 10/12/2017.
+ * Code Source - https://github.com/JayaprakashR-Zealot/SnapchatDashboard/blob/master/app/src/main/java/com/truedreamz/demo/swipe/adapter/FragmentsClassesPagerAdapter.java
+ * Adapter for {@link ViewPager} that will populated from the collection of Fragments classes. Objects of that classes
+ * will be instantiated on demand and used as a pages views.
  */
 
 public class FragmentsPagerAdapter extends FragmentPagerAdapter {

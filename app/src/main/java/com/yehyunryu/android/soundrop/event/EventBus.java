@@ -5,6 +5,7 @@ import com.squareup.otto.Bus;
 /**
  * Code Source - https://github.com/JayaprakashR-Zealot/SnapchatDashboard/blob/master/app/src/main/java/com/truedreamz/demo/swipe/event/EventBus.java
  * Provides a singleton instance for the application event bus.
+ * Otto is an event bust designed to handle different tasks while allowing them to communicate efficiently
  */
 public class EventBus {
 
