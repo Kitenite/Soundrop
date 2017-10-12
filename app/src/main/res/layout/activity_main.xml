@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<com.yehyunryu.android.soundrop.viewpagers.VerticalPager xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_main_vertical_pager"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.yehyunryu.android.soundrop.ui.MainActivity">
+    android:layout_height="match_parent">
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/main_viewpager"
+    <fragment
+        android:id="@+id/main_profile_fragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        class="com.yehyunryu.android.soundrop.ui.ProfileFragment" />
 
-</RelativeLayout>
+    <fragment
+        android:id="@+id/main_central_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        class="com.yehyunryu.android.soundrop.ui.CenterHorizontalFragment" />
+
+</com.yehyunryu.android.soundrop.viewpagers.VerticalPager>

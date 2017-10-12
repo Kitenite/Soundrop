@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 
 import com.yehyunryu.android.soundrop.R;
 
-public class StoryFragment extends Fragment {
+public class LibraryFragment extends Fragment {
 
-    public StoryFragment() {
+    public LibraryFragment() {
         // Required empty public constructor
     }
 
@@ -18,6 +18,7 @@ public class StoryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_story, container, false);
+        View fragmentView = inflater.inflate(R.layout.fragment_library, container, false);
+        return fragmentView;
     }
 }
