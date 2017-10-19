@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.yehyunryu.android.soundrop.views.VerticalPager xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main_vertical_pager"
+<android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_viewpager"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent" >
 
-    <fragment
-        android:id="@+id/main_profile_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        class="com.yehyunryu.android.soundrop.ui.ProfileFragment" />
-
-    <fragment
-        android:id="@+id/main_central_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        class="com.yehyunryu.android.soundrop.ui.CenterHorizontalFragment" />
-
-</com.yehyunryu.android.soundrop.views.VerticalPager>
+</android.support.v4.view.ViewPager>
