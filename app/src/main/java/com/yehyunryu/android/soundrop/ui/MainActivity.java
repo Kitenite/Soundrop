@@ -1,28 +1,30 @@
 package com.yehyunryu.android.soundrop.ui;
 
-import android.content.Intent;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.ImageButton;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.yehyunryu.android.soundrop.BuildConfig;
 import com.yehyunryu.android.soundrop.R;
 
@@ -30,32 +32,21 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
-    @BindView(R.id.main_nav_view) NavigationView mNavigationView;
-    @BindView(R.id.main_drawer_layout) DrawerLayout mDrawerLayout;
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
 
-    private View mNavHeader;
-    private ImageView mHeaderBackgroundIV;
-    private ImageView mProfileIV;
-    private TextView mUserNameTV;
-    private TextView mUserInfoTV;
-    private Toolbar mToolbar;
+    @BindView(R.id.main_profile) ImageButton mProfileButton;
+    @BindView(R.id.main_discover) ImageButton mDiscoverButton;
 
-    //index to identify current menu item
-    public static int sNavItemIndex = 0;
+    private static final int REQUEST_PERMISSION_FINE_LOCATION = 101;
 
-    //tags used to attach the fragments
-    private static final String TAG_EXPLORE = "explore";
-    private static final String TAG_DISCOVER = "discover";
-    private static final String TAG_LIBRARY = "library";
-    public static String sCurrentTag = TAG_EXPLORE;
-
-    //toolbar titles for selected nav menu item
-    private String[] mActivityTitles;
-
-    //flat to load explore fragment when user presses back button
-    private boolean mShouldLoadExploreOnBackPress = true;
-    private Handler mHandler;
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    private Location mLastLocation;
+    private Marker mCurrLocationMarker;
+    private LocationManager mLocationManager;
 
     private GoogleMap mMap;
 
@@ -72,188 +63,131 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //bind views using butterknife
         ButterKnife.bind(this);
 
-        //handles runnable objects and process them in a separate thread
-        mHandler = new Handler();
+        //initialize location manager
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        //intialize and bind views for header
-        mToolbar = findViewById(R.id.main_toolbar);
-        mNavHeader = mNavigationView.getHeaderView(0);
-        mUserNameTV = (TextView) mNavHeader.findViewById(R.id.header_user_name);
-        mUserInfoTV = (TextView) mNavHeader.findViewById(R.id.header_user_info);
-        mHeaderBackgroundIV = (ImageView) mNavHeader.findViewById(R.id.header_image_background);
-        mProfileIV = (ImageView) mNavHeader.findViewById(R.id.header_user_profile);
-
-        //load toolbar titles from string resources
-        mActivityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
-
-        //load profile image, user name, user info into header
-        loadNavHeader();
-
-        //initialize navigation menu
-        setUpNavigationView();
-
-        //use default values if first time opening
-        if(savedInstanceState == null) {
-            sNavItemIndex = 0;
-            sCurrentTag = TAG_EXPLORE;
-            loadFragment();
-        }
-    }
-
-    //set profile picture, user name, user info into header
-    private void loadNavHeader() {
-        mUserNameTV.setText("Soundrop");
-        mUserInfoTV.setText("Version 1.0");
-    }
-
-    //returns respected fragment that was selected by user from navigation menu
-    private void loadFragment() {
-        //check appropriate nav menu item
-        mNavigationView.getMenu().getItem(sNavItemIndex).setChecked(true);
-
-        //set toolbar title
-        mToolbar.setTitle(mActivityTitles[sNavItemIndex]);
-
-        //if selected menu is the current fragment, simply close the drawer
-        if(getSupportFragmentManager().findFragmentByTag(sCurrentTag) != null) {
-            mDrawerLayout.closeDrawers();
-            return;
-        }
-
-        //transition from current fragment to selected fragment
-        Runnable mPendingRunnable = new Runnable() {
-            @Override
-            public void run() {
-                Fragment fragment = getFragment();
-                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
-                fragmentTransaction.replace(R.id.main_frame, fragment, sCurrentTag);
-                fragmentTransaction.commitAllowingStateLoss();
-            }
-        };
-
-        //add to pending runnable if not null
-        if(mPendingRunnable != null) {
-            mHandler.post(mPendingRunnable);
-        }
-
-        //close drawer
-        mDrawerLayout.closeDrawers();
-
-        //refresh toolbar menu
-        invalidateOptionsMenu();
-    }
-
-    //returns selected fragment
-    private Fragment getFragment() {
-        switch(sNavItemIndex) {
-            case 0:
-                return new ExploreFragment();
-            case 1:
-                return new DiscoverFragment();
-            case 2:
-                return new LibraryFragment();
-            default:
-                return new ExploreFragment();
-        }
-    }
-
-    //initialize navigation menu
-    private void setUpNavigationView() {
-        //handles navigation item selection and changes index and tag to match selected menu
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch(item.getItemId()) {
-                    case R.id.nav_explore:
-                        sNavItemIndex = 0;
-                        sCurrentTag = TAG_EXPLORE;
-                        break;
-                    case R.id.nav_discover:
-                        sNavItemIndex = 1;
-                        sCurrentTag = TAG_DISCOVER;
-                        break;
-                    case R.id.nav_library:
-                        sNavItemIndex = 2;
-                        sCurrentTag = TAG_LIBRARY;
-                        break;
-                    case R.id.nav_settings:
-                        startActivity(new Intent(MainActivity.this, SettingsActivity.class));
-                        mDrawerLayout.closeDrawers();
-                        return true;
-                    case R.id.nav_about_us:
-                        startActivity(new Intent(MainActivity.this, AboutUsActivity.class));
-                        mDrawerLayout.closeDrawers();
-                        return true;
-                    case R.id.nav_logout:
-                        //TODO: Logout
-                        Toast.makeText(MainActivity.this, "Logout", Toast.LENGTH_SHORT).show();
-                        mDrawerLayout.closeDrawers();
-                        return true;
-                    default:
-                        sNavItemIndex = 0;
-                }
-
-                //make selected item checked
-                item.setChecked(true);
-
-                //load selected fragment
-                loadFragment();
-
-                return true;
-            }
-        });
-
-        //handles closing and opening of drawer
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.openDrawer, R.string.closeDrawer) {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-            }
-        };
-
-        //set drawer toggle to drawer
-        mDrawerLayout.addDrawerListener(actionBarDrawerToggle);
-
-        //necessary for hamburger icon to show
-        actionBarDrawerToggle.syncState();
-
-        //set logout menu to red color
-        MenuItem menuItem = mNavigationView.getMenu().findItem(R.id.nav_logout);
-        SpannableString logoutTitle = new SpannableString(menuItem.getTitle());
-        logoutTitle.setSpan(new ForegroundColorSpan(ContextCompat.getColor(this, R.color.colorAccent)), 0, logoutTitle.length(), 0);
-        menuItem.setTitle(logoutTitle);
-    }
-
-    @Override
-    public void onBackPressed() {
-        //closes drawer if open
-        if(mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mDrawerLayout.closeDrawers();
-            return;
-        }
-
-        //displays explore fragment if in another fragment
-        if(mShouldLoadExploreOnBackPress) {
-            if(sNavItemIndex != 0) {
-                sNavItemIndex = 0;
-                sCurrentTag = TAG_EXPLORE;
-                loadFragment();
-                return;
-            }
-        }
-
-        super.onBackPressed();
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.main_map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        //initialize map attributes
-        mMap = googleMap;;
+        Timber.d("onMapReady");
+        mMap = googleMap;
+        //TODO: Set my location button in bottom right
+
+        //buildGoogleApiClient();
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            buildGoogleApiClient();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_PERMISSION_FINE_LOCATION);
+        }
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Timber.d("buildGoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addOnConnectionFailedListener(this)
+                .addConnectionCallbacks(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode) {
+            case REQUEST_PERMISSION_FINE_LOCATION:
+                if(grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    buildGoogleApiClient();
+                } else {
+                    //TODO: Handle denied permission
+                }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Timber.d("onConnected");
+        /**
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        }
+         **/
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, this);
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 0, this);
+            mLocationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 500, 0, this);
+            Timber.d("requestLocationUpdates");
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        //TODO: Handle suspended connection
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        //TODO: Handle failed connection
+    }
+
+    /**
+    Timber.d("Location Changed");
+    mLastLocation = location;
+    if(mCurrLocationMarker != null) mCurrLocationMarker.remove();
+
+    LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+    MarkerOptions markerOptions = new MarkerOptions();
+    markerOptions.position(latlng);
+    markerOptions.title("Current Position");
+    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+    mCurrLocationMarker = mMap.addMarker(markerOptions);
+
+    mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+    mMap.animateCamera(CameraUpdateFactory.zoomTo(17.f));
+
+    if(mGoogleApiClient != null) {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+     **/
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Timber.d("locationChanged");
+        mLastLocation = location;
+        if(mCurrLocationMarker != null) mCurrLocationMarker.remove();
+
+        LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latlng);
+        markerOptions.title("Current Position");
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+        mCurrLocationMarker = mMap.addMarker(markerOptions);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(17.f));
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 }
